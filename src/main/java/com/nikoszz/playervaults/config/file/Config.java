@@ -1,6 +1,6 @@
 /*
  * PlayerVaultsX
- * Copyright (C) 2013 Trent Hensler, Laxwashere, CmdrKittens
+ * Copyright (C) 2021 nikoszz
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ public class Config {
     public class Block {
         private boolean enabled = true;
         @Comment("Material list for blocked items (does not support ID's), only effective if the feature is enabled.\n" +
-                " If you don't know material names: https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Material.html")
+                "If you don't know material names: https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Material.html.")
         private List<String> list = new ArrayList<String>() {
             {
                 this.add("PUMPKIN");
@@ -111,11 +111,9 @@ public class Config {
         }
     }
 
-    @Comment("PlayerVaults\n" +
-            "Created by: https://github.com/drtshock/PlayerVaults/graphs/contributors/\n" +
-            "Resource page: https://www.spigotmc.org/resources/51204/\n" +
-            "Discord server: https://discordapp.com/invite/JZcWDEt/\n" +
-            "Made with love <3")
+    @Comment("PlayerVaultsX\n" +
+            "Created by:nikoszz\n" +
+            "Made with love.")
     private boolean aPleasantHello=true;
 
     @Comment("Debug Mode\n" +
@@ -129,7 +127,7 @@ public class Config {
 
     @Comment("Language\n" +
             " This determines which language file the plugin will read from.\n" +
-            "  Valid options are (don't include .yml): bulgarian, danish, dutch, english, german, turkish, russian")
+            "  Valid options are (don't include .yml): english")
     private String language = "english";
 
     @Comment("Signs\n" +
@@ -156,7 +154,7 @@ public class Config {
     @Comment("Sets the highest vault amount this plugin will test perms for")
     private int maxVaultAmountPermTest = 99;
 
-    @Comment("Storage option. Currently only flatfile, but soon more! :)")
+    @Comment("Storage option. Currently only flatfile.")
     private Storage storage = new Storage();
 
     public void setFromConfig(Logger l, FileConfiguration c) {

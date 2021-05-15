@@ -1,6 +1,6 @@
 /*
  * PlayerVaultsX
- * Copyright (C) 2013 Trent Hensler
+ * Copyright (C) 2021 nikoszz
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ public class Cleanup implements Runnable {
     public void run() {
         File directory = PlayerVaults.getInstance().getVaultData();
         if (!directory.exists()) {
-            // folder doesn't exist, don't run
+            // the folder doesn't exist, don't run
             return;
         }
 

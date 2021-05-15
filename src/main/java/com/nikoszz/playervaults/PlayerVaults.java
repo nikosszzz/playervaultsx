@@ -352,7 +352,7 @@ public class PlayerVaults extends JavaPlugin {
                 signs.createNewFile();
             } catch (IOException e) {
                 getLogger().severe("PlayerVaults has encountered a fatal error trying to load the signs file.");
-                getLogger().severe("Please report this error on GitHub @ https://github.com/drtshock/PlayerVaults/.");
+                getLogger().severe("Please report this error to nikoszz.");
                 e.printStackTrace();
             }
         }
@@ -369,7 +369,7 @@ public class PlayerVaults extends JavaPlugin {
             signs.load(signsFile);
         } catch (IOException | InvalidConfigurationException e) {
             getLogger().severe("PlayerVaults has encountered a fatal error trying to reload the signs file.");
-            getLogger().severe("Please report this error on GitHub @ https://github.com/drtshock/PlayerVaults/.");
+            getLogger().severe("Please report this error to nikoszz.");
             e.printStackTrace();
         }
     }
@@ -400,7 +400,7 @@ public class PlayerVaults extends JavaPlugin {
             signs.save(this.signsFile);
         } catch (IOException e) {
             getLogger().severe("PlayerVaults has encountered an error trying to save the signs file.");
-            getLogger().severe("Please report this error on GitHub @ https://github.com/drtshock/PlayerVaults/.");
+            getLogger().severe("Please report this error to nikoszz.");
             e.printStackTrace();
         }
     }

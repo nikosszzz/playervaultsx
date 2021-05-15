@@ -43,6 +43,15 @@ import java.util.zip.GZIPOutputStream;
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class Metrics {
 
+    static {
+        // Maven's Relocate is clever and changes strings, too. So we have to use this little "trick" ... :D
+        final String defaultPackage = new String(
+                new byte[]{'c', 'o', 'm', '.', 'n', 'i', 'k', 'o', 's', 'z', 'z', '.', 'p', 'l', 'a', 'y', 'e', 'r', 'v', 'a', 'u', 'l', 't', 's'});
+        if (!Metrics.class.getPackage().getName().equals(defaultPackage)) {
+            throw new IllegalStateException("You done screwed up! You are running a modified copy.");
+        }
+    }
+
     // The version of this bStats class
     public static final int B_STATS_VERSION = 1;
 

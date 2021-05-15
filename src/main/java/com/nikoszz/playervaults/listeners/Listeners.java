@@ -1,6 +1,6 @@
 /*
  * PlayerVaultsX
- * Copyright (C) 2013 Trent Hensler
+ * Copyright (C) 2021 nikoszz
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ public class Listeners implements Listener {
 
             PlayerVaults.debug(inventory.getType() + " " + inventory.getClass().getSimpleName());
             if (inventory.getViewers().size() <= 1) {
-                PlayerVaults.debug("Saving!");
+                PlayerVaults.debug("Saving...");
                 VaultViewInfo info = plugin.getInVault().get(player.getUniqueId().toString());
                 vaultManager.saveVault(inv, info.getVaultName(), info.getNumber());
                 plugin.getOpenInventories().remove(info.toString());

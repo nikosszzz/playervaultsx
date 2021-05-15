@@ -1,6 +1,6 @@
 /*
  * PlayerVaultsX
- * Copyright (C) 2013 Trent Hensler
+ * Copyright (C) 2021 nikoszz
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
  */
 public enum Lang {
     TITLE("title-name", "&6&lAL &c|&r"),
-    OPEN_VAULT("open-vault", "&fOpening vault &a%v"),
+    OPEN_VAULT("open-vault", "&fOpening vault &a%v."),
     OPEN_OTHER_VAULT("open-other-vault", "&fOpening vault &a%v &fof &a%p."),
     INVALID_ARGS("invalid-args", "&cInvalid args."),
     DELETE_VAULT("delete-vault", "&fDeleted vault &a%v."),

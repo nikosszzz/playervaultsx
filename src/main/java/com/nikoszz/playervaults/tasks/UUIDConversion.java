@@ -1,6 +1,6 @@
 /*
  * PlayerVaultsX
- * Copyright (C) 2013 Trent Hensler
+ * Copyright (C) 2021 nikoszz
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -67,7 +67,7 @@ public final class UUIDConversion implements Runnable {
                 }
             }
 
-            logger.info("********** Conversion done ;D **********");
+            logger.info("********** Conversion done! **********");
         }
     }
 }
