@@ -21,7 +21,6 @@ package com.nikoszz.playervaults.commands;
 import com.nikoszz.playervaults.PlayerVaults;
 import com.nikoszz.playervaults.converters.BackpackConverter;
 import com.nikoszz.playervaults.converters.Converter;
-import com.nikoszz.playervaults.translations.Lang;
 import com.nikoszz.playervaults.vaultmanagement.VaultOperations;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -33,18 +32,19 @@ import java.util.List;
 public class ConvertCommand implements CommandExecutor {
 
     private final List<Converter> converters = new ArrayList<>();
+    private final PlayerVaults plugin;
 
-    public ConvertCommand() {
+    public ConvertCommand(PlayerVaults plugin) {
         converters.add(new BackpackConverter());
     }
 
     @Override
     public boolean onCommand(final CommandSender sender, Command command, String label, String[] args) {
         if (!sender.hasPermission("playervaults.convert")) {
-            sender.sendMessage(Lang.TITLE.toString() + Lang.NO_PERMS);
+            this.plugin.getTL().noPerms().title().send(sender);
         } else {
             if (args.length == 0) {
-                sender.sendMessage(Lang.TITLE + "/" + label + " <all | plugin name>");
+                sender.sendMessage("/" + label + " <all | plugin name>");
             } else {
                 String name = args[0];
                 final List<Converter> applicableConverters = new ArrayList<>();
@@ -58,10 +58,10 @@ public class ConvertCommand implements CommandExecutor {
                     }
                 }
                 if (applicableConverters.size() <= 0) {
-                    sender.sendMessage(Lang.TITLE.toString() + Lang.CONVERT_PLUGIN_NOT_FOUND);
+                    this.plugin.getTL().convertPluginNotFound().title().send(sender);
                 } else {
                     // Fork into background
-                    sender.sendMessage(Lang.TITLE + Lang.CONVERT_BACKGROUND.toString());
+                    this.plugin.getTL().convertBackground().title().send(sender);
                     PlayerVaults.getInstance().getServer().getScheduler().runTaskLaterAsynchronously(PlayerVaults.getInstance(), () -> {
                         int converted = 0;
                         VaultOperations.setLocked(true);
@@ -71,7 +71,7 @@ public class ConvertCommand implements CommandExecutor {
                             }
                         }
                         VaultOperations.setLocked(false);
-                        sender.sendMessage(Lang.TITLE + Lang.CONVERT_COMPLETE.toString().replace("%converted", converted + ""));
+                        this.plugin.getTL().convertComplete().title().with("count", converted + "").send(sender);
                     }, 5);
                 }
             }

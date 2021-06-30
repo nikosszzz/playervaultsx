@@ -19,11 +19,13 @@
 package com.nikoszz.playervaults.vaultmanagement;
 
 import com.nikoszz.playervaults.PlayerVaults;
-import com.nikoszz.playervaults.translations.Lang;
+import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
-import org.bukkit.ChatColor;
+import net.milkbowl.vault.permission.Permission;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.io.File;
 
@@ -31,6 +33,33 @@ import java.io.File;
  * A class that handles all economy operations.
  */
 public class EconomyOperations {
+
+    private static Economy economy;
+
+    public static boolean setup() {
+        economy = null;
+        if (Bukkit.getServer().getPluginManager().getPlugin("Vault") != null) {
+            RegisteredServiceProvider<Economy> provider = Bukkit.getServer().getServicesManager().getRegistration(Economy.class);
+            if (provider != null) {
+                economy = provider.getProvider();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static String getName() {
+        return economy == null ? "NONE" : economy.getName();
+    }
+
+    public static String getPermsName() {
+        RegisteredServiceProvider<Permission> provider = Bukkit.getServer().getServicesManager().getRegistration(Permission.class);
+        if (provider != null) {
+            Permission perm = provider.getProvider();
+            return perm.getName();
+        }
+        return null;
+    }
 
     /**
      * Have a player pay to open a vault.
@@ -51,9 +80,9 @@ public class EconomyOperations {
                 return true;
             }
             double cost = PlayerVaults.getInstance().getConf().getEconomy().getFeeToOpen();
-            EconomyResponse resp = PlayerVaults.getInstance().getEconomy().withdrawPlayer(player, cost);
+            EconomyResponse resp = economy.withdrawPlayer(player, cost);
             if (resp.transactionSuccess()) {
-                player.sendMessage(Lang.TITLE.toString() + Lang.COST_TO_OPEN.toString().replaceAll("%price", "" + cost));
+                PlayerVaults.getInstance().getTL().costToOpen().title().with("price", cost + "").send(player);
                 return true;
             }
         }
@@ -73,9 +102,9 @@ public class EconomyOperations {
         }
 
         double cost = PlayerVaults.getInstance().getConf().getEconomy().getFeeToCreate();
-        EconomyResponse resp = PlayerVaults.getInstance().getEconomy().withdrawPlayer(player, cost);
+        EconomyResponse resp = economy.withdrawPlayer(player, cost);
         if (resp.transactionSuccess()) {
-            player.sendMessage(Lang.TITLE.toString() + Lang.COST_TO_CREATE.toString().replaceAll("%price", "" + cost));
+            PlayerVaults.getInstance().getTL().costToCreate().title().with("price", cost + "").send(player);
             return true;
         }
 
@@ -98,18 +127,18 @@ public class EconomyOperations {
         if (playerFile.exists()) {
             YamlConfiguration playerData = YamlConfiguration.loadConfiguration(playerFile);
             if (playerData.getString("vault" + number) == null) {
-                player.sendMessage(Lang.TITLE.toString() + ChatColor.RED + Lang.VAULT_DOES_NOT_EXIST);
+                PlayerVaults.getInstance().getTL().vaultDoesNotExist().title().send(player);
                 return false;
             }
         } else {
-            player.sendMessage(Lang.TITLE.toString() + ChatColor.RED + Lang.VAULT_DOES_NOT_EXIST);
+            PlayerVaults.getInstance().getTL().vaultDoesNotExist().title().send(player);
             return false;
         }
 
         double cost = PlayerVaults.getInstance().getConf().getEconomy().getRefundOnDelete();
-        EconomyResponse resp = PlayerVaults.getInstance().getEconomy().depositPlayer(player, cost);
+        EconomyResponse resp = economy.depositPlayer(player, cost);
         if (resp.transactionSuccess()) {
-            player.sendMessage(Lang.TITLE.toString() + Lang.REFUND_AMOUNT.toString().replaceAll("%price", String.valueOf(cost)));
+            PlayerVaults.getInstance().getTL().refundAmount().title().with("price", cost + "").send(player);
             return true;
         }
 

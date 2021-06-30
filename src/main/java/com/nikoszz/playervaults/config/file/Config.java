@@ -25,7 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
-@SuppressWarnings({"FieldCanBeLocal", "InnerClassMayBeStatic", "unused"})
+@SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal", "InnerClassMayBeStatic", "unused"})
 public class Config {
     public class Block {
         private boolean enabled = true;
@@ -114,7 +114,7 @@ public class Config {
     @Comment("PlayerVaultsX\n" +
             "Created by:nikoszz\n" +
             "Made with love.")
-    private boolean aPleasantHello=true;
+    private boolean aPleasantHello = true;
 
     @Comment("Debug Mode\n" +
             " This will print everything the plugin is doing to console.\n" +
@@ -124,11 +124,6 @@ public class Config {
     @Comment("Can be 1 through 6.\n" +
             "Default: 6")
     private int defaultVaultRows = 6;
-
-    @Comment("Language\n" +
-            " This determines which language file the plugin will read from.\n" +
-            "  Valid options are (don't include .yml): english")
-    private String language = "english";
 
     @Comment("Signs\n" +
             " This will determine whether vault signs are enabled.\n" +
@@ -159,25 +154,24 @@ public class Config {
 
     public void setFromConfig(Logger l, FileConfiguration c) {
         l.info("Importing old configuration...");
-        l.info("debug = "+(this.debug = c.getBoolean("debug", false)));
-        l.info("language = "+(this.language = c.getString("language", "english")));
-        l.info("signs = "+(this.signs = c.getBoolean("signs-enabled", false)));
-        l.info("economy enabled = "+(this.economy.enabled = c.getBoolean("economy.enabled", false)));
-        l.info(" creation fee = "+(this.economy.feeToCreate = c.getDouble("economy.cost-to-create", 100)));
-        l.info(" open fee = "+(this.economy.feeToOpen = c.getDouble("economy.cost-to-open", 10)));
-        l.info(" refund = "+(this.economy.refundOnDelete = c.getDouble("economy.refund-on-delete", 50)));
-        l.info("item blocking enabled = "+(this.itemBlocking.enabled = c.getBoolean("blockitems", true)));
-        l.info("blocked items = "+(this.itemBlocking.list = c.getStringList("blocked-items")));
+        l.info("debug = " + (this.debug = c.getBoolean("debug", false)));
+        l.info("signs = " + (this.signs = c.getBoolean("signs-enabled", false)));
+        l.info("economy enabled = " + (this.economy.enabled = c.getBoolean("economy.enabled", false)));
+        l.info(" creation fee = " + (this.economy.feeToCreate = c.getDouble("economy.cost-to-create", 100)));
+        l.info(" open fee = " + (this.economy.feeToOpen = c.getDouble("economy.cost-to-open", 10)));
+        l.info(" refund = " + (this.economy.refundOnDelete = c.getDouble("economy.refund-on-delete", 50)));
+        l.info("item blocking enabled = " + (this.itemBlocking.enabled = c.getBoolean("blockitems", true)));
+        l.info("blocked items = " + (this.itemBlocking.list = c.getStringList("blocked-items")));
         if (this.itemBlocking.list == null) {
             this.itemBlocking.list = new ArrayList<>();
             this.itemBlocking.list.add("PUMPKIN");
             this.itemBlocking.list.add("DIAMOND_BLOCK");
-            l.info(" set defaults: "+this.itemBlocking.list);
+            l.info(" set defaults: " + this.itemBlocking.list);
         }
-        l.info("cleanup purge enabled = "+(this.purge.enabled = c.getBoolean("cleanup.enable", false)));
-        l.info(" days since last edit = "+(this.purge.daysSinceLastEdit = c.getInt("cleanup.lastEdit", 30)));
-        l.info("flatfile storage backups = "+(this.storage.flatFile.backups = c.getBoolean("backups.enabled", true)));
-        l.info("max vault amount to test via perms = "+(this.maxVaultAmountPermTest = c.getInt("max-vault-amount-perm-to-test", 99)));
+        l.info("cleanup purge enabled = " + (this.purge.enabled = c.getBoolean("cleanup.enable", false)));
+        l.info(" days since last edit = " + (this.purge.daysSinceLastEdit = c.getInt("cleanup.lastEdit", 30)));
+        l.info("flatfile storage backups = " + (this.storage.flatFile.backups = c.getBoolean("backups.enabled", true)));
+        l.info("max vault amount to test via perms = " + (this.maxVaultAmountPermTest = c.getInt("max-vault-amount-perm-to-test", 99)));
     }
 
     public boolean isDebug() {
@@ -188,9 +182,6 @@ public class Config {
         return this.defaultVaultRows;
     }
 
-    public String getLanguage() {
-        return this.language;
-    }
 
     public boolean isSigns() {
         return this.signs;

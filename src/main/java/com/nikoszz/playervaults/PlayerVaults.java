@@ -2,22 +2,22 @@ package com.nikoszz.playervaults;
 
 import com.nikoszz.playervaults.commands.ConvertCommand;
 import com.nikoszz.playervaults.commands.DeleteCommand;
+import com.nikoszz.playervaults.commands.HelpMeCommand;
 import com.nikoszz.playervaults.commands.SignCommand;
 import com.nikoszz.playervaults.commands.SignSetInfo;
 import com.nikoszz.playervaults.commands.VaultCommand;
 import com.nikoszz.playervaults.config.Loader;
 import com.nikoszz.playervaults.config.file.Config;
+import com.nikoszz.playervaults.config.file.Translation;
 import com.nikoszz.playervaults.listeners.Listeners;
 import com.nikoszz.playervaults.listeners.SignListener;
 import com.nikoszz.playervaults.listeners.VaultPreloadListener;
 import com.nikoszz.playervaults.tasks.Base64Conversion;
 import com.nikoszz.playervaults.tasks.Cleanup;
-import com.nikoszz.playervaults.tasks.UUIDConversion;
-import com.nikoszz.playervaults.translations.Lang;
-import com.nikoszz.playervaults.translations.Language;
-import com.nikoszz.playervaults.vaultmanagement.UUIDVaultManager;
+import com.nikoszz.playervaults.vaultmanagement.EconomyOperations;
 import com.nikoszz.playervaults.vaultmanagement.VaultManager;
 import com.nikoszz.playervaults.vaultmanagement.VaultViewInfo;
+import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Bukkit;
@@ -26,29 +26,32 @@ import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.SimpleCommandMap;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.RegisteredServiceProvider;
-import org.bukkit.plugin.SimplePluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import sun.misc.Unsafe;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.nio.file.Files;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
@@ -62,7 +65,6 @@ public class PlayerVaults extends JavaPlugin {
     // VaultViewInfo - Inventory
     private final HashMap<String, Inventory> openInventories = new HashMap<>();
     private final Set<Material> blockedMats = new HashSet<>();
-    private Economy economy;
     private boolean useVault;
     private YamlConfiguration signs;
     private File signsFile;
@@ -74,7 +76,10 @@ public class PlayerVaults extends JavaPlugin {
     private String _versionString;
     private int maxVaultAmountPermTest;
     private Metrics metrics;
-    private Config config = new Config();
+    private final Config config = new Config();
+    private BukkitAudiences platform;
+    private final Translation translation = new Translation(this);
+    private final List<String> exceptions = new CopyOnWriteArrayList<>();   
 
     public static PlayerVaults getInstance() {
         return instance;
@@ -97,25 +102,19 @@ public class PlayerVaults extends JavaPlugin {
         instance = this;
         long start = System.currentTimeMillis();
         long time = System.currentTimeMillis();
+        this.platform = BukkitAudiences.create(this);
+        debug("adventure!", time);
+        time = System.currentTimeMillis();        
         loadConfig();
         DEBUG = getConf().isDebug();
         debug("config", time);
         time = System.currentTimeMillis();
         uuidData = new File(this.getDataFolder(), "uuidvaults");
-        vaultData = new File(this.getDataFolder(), "base64vaults");
-        debug("vaultdata", time);
-        time = System.currentTimeMillis();
-        getServer().getScheduler().runTask(this, new UUIDConversion()); // Convert to UUIDs first. Class checks if necessary.
-        debug("uuid conversion", time);
-        time = System.currentTimeMillis();
-        new VaultManager();
+        vaultData = new File(this.getDataFolder(), "newvaults");
+        new VaultManager(this);
         getServer().getScheduler().runTask(this, new Base64Conversion());
         debug("base64 conversion", time);
         time = System.currentTimeMillis();
-        loadLang();
-        debug("lang", time);
-        time = System.currentTimeMillis();
-        new UUIDVaultManager();
         debug("uuidvaultmanager", time);
         time = System.currentTimeMillis();
         getServer().getPluginManager().registerEvents(new Listeners(this), this);
@@ -128,13 +127,14 @@ public class PlayerVaults extends JavaPlugin {
         loadSigns();
         debug("loaded signs", time);
         time = System.currentTimeMillis();
-        getCommand("pv").setExecutor(new VaultCommand());
-        getCommand("pvdel").setExecutor(new DeleteCommand());
-        getCommand("pvconvert").setExecutor(new ConvertCommand());
-        getCommand("pvsign").setExecutor(new SignCommand());
+        getCommand("pv").setExecutor(new VaultCommand(this));
+        getCommand("pvdel").setExecutor(new DeleteCommand(this));
+        getCommand("pvconvert").setExecutor(new ConvertCommand(this));
+        getCommand("pvsign").setExecutor(new SignCommand(this));
+        getCommand("pvhelpme").setExecutor(new HelpMeCommand(this));        
         debug("registered commands", time);
         time = System.currentTimeMillis();
-        useVault = setupEconomy();
+        useVault = EconomyOperations.setup();
         debug("setup economy", time);
 
         if (getConf().getPurge().isEnabled()) {
@@ -157,15 +157,18 @@ public class PlayerVaults extends JavaPlugin {
             this.metricsDrillPie("vault_econ", () -> {
                 Map<String, Map<String, Integer>> map = new HashMap<>();
                 Map<String, Integer> entry = new HashMap<>();
-                entry.put(economy == null ? "none" : economy.getName(), 1);
+                entry.put(!this.useVault ? "none" : EconomyOperations.getName(), 1);
                 map.put(isEconomyEnabled() ? "enabled" : "disabled", entry);
                 return map;
             });
             if (isEconomyEnabled()) {
-                String name = economy.getName();
+                String name = EconomyOperations.getName();
                 if (name.equals("Essentials Economy")) {
                     name = "Essentials";
                 }
+                if (name.equals("CMIEconomy")) {
+                    name = "CMI";
+                }                
                 Plugin plugin = getServer().getPluginManager().getPlugin(name);
                 if (plugin != null) {
                     this.metricsDrillPie("vault_econ_plugins", () -> {
@@ -180,10 +183,8 @@ public class PlayerVaults extends JavaPlugin {
         }
 
         if (vault != null) {
-            RegisteredServiceProvider<Permission> provider = getServer().getServicesManager().getRegistration(Permission.class);
-            if (provider != null) {
-                Permission perm = provider.getProvider();
-                String name = perm.getName();
+            String name = EconomyOperations.getPermsName();
+            if (name != null) {
                 Plugin plugin = getServer().getPluginManager().getPlugin(name);
                 final String version;
                 if (plugin == null) {
@@ -202,8 +203,8 @@ public class PlayerVaults extends JavaPlugin {
         }
 
         this.metricsSimplePie("signs", () -> getConf().isSigns() ? "enabled" : "disabled");
+        this.metricsSimplePie("cats", () -> HelpMeCommand.likesCats ? "meow" : "purr");
         this.metricsSimplePie("cleanup", () -> getConf().getPurge().isEnabled() ? "enabled" : "disabled");
-        this.metricsSimplePie("language", () -> getConf().getLanguage());
 
         this.metricsDrillPie("block_items", () -> {
             Map<String, Map<String, Integer>> map = new HashMap<>();
@@ -295,24 +296,9 @@ public class PlayerVaults extends JavaPlugin {
             reloadConfig();
             loadConfig(); // To update blocked materials.
             reloadSigns();
-            loadLang();
             sender.sendMessage(ChatColor.GREEN + "Reloaded PlayerVault's configuration and lang files.");
         }
         return true;
-    }
-
-    private boolean setupEconomy() {
-        if (getServer().getPluginManager().getPlugin("Vault") == null) {
-            return false;
-        }
-
-        RegisteredServiceProvider<Economy> provider = getServer().getServicesManager().getRegistration(Economy.class);
-        if (provider == null) {
-            return false;
-        }
-
-        economy = provider.getProvider();
-        return economy != null;
     }
 
     private void loadConfig() {
@@ -330,7 +316,7 @@ public class PlayerVaults extends JavaPlugin {
         try {
             Loader.loadAndSave("config", this.config);
         } catch (IOException | IllegalAccessException e) {
-            this.getLogger().log(Level.SEVERE, "Could not load config.", e);
+            this.getLogger().log(Level.SEVERE, "Failed to move config for backup: " + e.getMessage());
         }
 
         // Clear just in case this is a reload.
@@ -343,6 +329,23 @@ public class PlayerVaults extends JavaPlugin {
                     getLogger().log(Level.INFO, "Added {0} to list of blocked materials.", mat.name());
                 }
             }
+        }
+        File lang = new File(this.getDataFolder(), "lang");
+        if (lang.exists()) {
+            this.getLogger().warning("There is no clean way for us to migrate your old lang data.");
+            this.getLogger().warning("If you made any customizations, or used another language, you need to migrate the info to the new format in lang.conf");
+            try {
+                Files.move(lang.toPath(), lang.getParentFile().toPath().resolve("old_unused_lang"));
+            } catch (Exception e) {
+                this.getLogger().log(Level.SEVERE, "Failed to rename lang folder as it is no longer used: " + e.getMessage());
+                configYaml.deleteOnExit();
+            }
+        }
+
+        try {
+            Loader.loadAndSave("lang", this.translation);
+        } catch (IOException | IllegalAccessException e) {
+            this.getLogger().log(Level.SEVERE, "Could not load lang.", e);
         }
     }
 
@@ -410,50 +413,6 @@ public class PlayerVaults extends JavaPlugin {
         }
     }
 
-    public void loadLang() {
-        File folder = new File(getDataFolder(), "lang");
-        if (!folder.exists()) {
-            folder.mkdir();
-        }
-
-        String definedLanguage = getConf().getLanguage();
-
-        // Save as default just incase.
-        File english = null;
-        File definedFile = null;
-
-        for (Language lang : Language.values()) {
-            String fileName = lang.getFriendlyName() + ".yml";
-            File file = new File(folder, fileName);
-            if (lang == Language.ENGLISH) {
-                english = file;
-            }
-
-            if (definedLanguage.equalsIgnoreCase(lang.getFriendlyName())) {
-                definedFile = file;
-            }
-
-            // Have Bukkit save the file.
-            if (!file.exists()) {
-                saveResource("lang/" + fileName, false);
-            }
-        }
-
-        if (definedFile != null && !definedFile.exists()) {
-            getLogger().severe("Failed to load language for " + definedLanguage + ". Defaulting to English.");
-            definedFile = english;
-        }
-
-        if (definedFile == null) {
-            getLogger().severe("Failed to load custom language settings. Loading plugin defaults. This should never happen, go ask for help.");
-            return;
-        }
-
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(definedFile);
-        Lang.setFile(config);
-        getLogger().info("Loaded lang for " + definedLanguage);
-    }
-
     public HashMap<String, SignSetInfo> getSetSign() {
         return this.setSign;
     }
@@ -464,10 +423,6 @@ public class PlayerVaults extends JavaPlugin {
 
     public HashMap<String, Inventory> getOpenInventories() {
         return this.openInventories;
-    }
-
-    public Economy getEconomy() {
-        return this.economy;
     }
 
     public boolean isEconomyEnabled() {
@@ -482,7 +437,7 @@ public class PlayerVaults extends JavaPlugin {
      * Get the legacy UUID vault data folder.
      * Deprecated in favor of base64 data.
      *
-     * @return
+     * @return uuid folder 
      */
     @Deprecated
     public File getUuidData() {
@@ -553,5 +508,47 @@ public class PlayerVaults extends JavaPlugin {
 
     public int getMaxVaultAmountPermTest() {
         return this.maxVaultAmountPermTest;
+    }
+
+    public BukkitAudiences getPlatform() {
+        return this.platform;
+    }
+
+    public Translation getTL() {
+        return this.translation;
+    }
+
+    public String getVaultTitle(String id) {
+        return this.translation.vaultTitle().with("vault", id).getLegacy();
+    }
+
+    public String getExceptions() {
+        if (this.exceptions.isEmpty()) {
+            return null;
+        }
+        StringBuilder builder = new StringBuilder();
+        boolean more = false;
+        for (String e : this.exceptions) {
+            if (more) {
+                builder.append("\n\n");
+            } else {
+                more = true;
+            }
+            builder.append(e);
+        }
+        return builder.toString();
+    }
+
+    public <T extends Throwable> T addException(T t) {
+        if (this.getConf().isDebug()) {
+            StringBuilder builder = new StringBuilder();
+            builder.append(ZonedDateTime.now(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("uuuu/MM/dd HH:mm:ss"))).append('\n');
+            StringWriter stringWriter = new StringWriter();
+            PrintWriter printWriter = new PrintWriter(stringWriter);
+            t.printStackTrace(printWriter);
+            builder.append(stringWriter.toString());
+            this.exceptions.add(builder.toString());
+        }
+        return t;
     }
 }

@@ -45,15 +45,15 @@
                     <relocations>
                         <relocation>
                             <pattern>net.kyori</pattern>
-                            <shadedPattern>com.drtshock.playervaults.lib.net.kyori</shadedPattern>
+                            <shadedPattern>com.nikoszz.playervaults.lib.net.kyori</shadedPattern>
                         </relocation>
                         <relocation>
                             <pattern>com.google.gson</pattern>
-                            <shadedPattern>com.drtshock.playervaults.lib.com.google.gson</shadedPattern>
+                            <shadedPattern>com.nikoszz.playervaults.lib.com.google.gson</shadedPattern>
                         </relocation>
                         <relocation>
                             <pattern>org.kitteh</pattern>
-                            <shadedPattern>com.drtshock.playervaults.lib.org.kitteh</shadedPattern>
+                            <shadedPattern>com.nikoszz.playervaults.lib.org.kitteh</shadedPattern>
                         </relocation>
                     </relocations>
                 </configuration>
