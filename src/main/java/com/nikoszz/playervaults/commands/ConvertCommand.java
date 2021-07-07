@@ -36,6 +36,7 @@ public class ConvertCommand implements CommandExecutor {
 
     public ConvertCommand(PlayerVaults plugin) {
         converters.add(new BackpackConverter());
+        this.plugin = plugin;
     }
 
     @Override
