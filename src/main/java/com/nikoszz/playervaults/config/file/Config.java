@@ -33,8 +33,8 @@ public class Config {
                 "If you don't know material names: https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Material.html.")
         private List<String> list = new ArrayList<String>() {
             {
-                this.add("PUMPKIN");
-                this.add("DIAMOND_BLOCK");
+                this.add("BEDROCK");
+                this.add("BARRIER");
             }
         };
 
@@ -119,7 +119,7 @@ public class Config {
     @Comment("Debug Mode\n" +
             " This will print everything the plugin is doing to console.\n" +
             " You should only enable this if you're working with a contributor to fix something.")
-    private boolean debug = false;
+    private boolean debug = true;
 
     @Comment("Can be 1 through 6.\n" +
             "Default: 6")
