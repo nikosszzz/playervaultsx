@@ -119,7 +119,7 @@ public class Config {
     @Comment("Debug Mode\n" +
             " This will print everything the plugin is doing to console.\n" +
             " You should only enable this if you're working with a contributor to fix something.")
-    private boolean debug = true;
+    private boolean debug = false;
 
     @Comment("Can be 1 through 6.\n" +
             "Default: 6")
