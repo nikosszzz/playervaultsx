@@ -5,7 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.serializer.craftbukkit.BukkitComponentSerializer;
+import net.kyori.adventure.platform.bukkit.BukkitComponentSerializer;
 import org.bukkit.command.CommandSender;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -127,7 +127,7 @@ public class Translation {
                     }
                 } else {
                     if (this.arrContains(features, TL.PRE_FORMATTED)) {
-                        repl = MiniMessage.get().escapeTokens(repl).replace("\\", "\\\\");
+                        repl = MiniMessage.miniMessage().escapeTokens(repl).replace("\\", "\\\\");
                     }
                     replMatcher.appendReplacement(builder, repl);
                 }
@@ -153,7 +153,7 @@ public class Translation {
                 tagMatcher.appendTail(builder);
                 line = builder.toString();
             }
-            return MiniMessage.get().parse(line);
+            return MiniMessage.miniMessage().parse(line);
         }
 
         public @NonNull String getLegacy() {
